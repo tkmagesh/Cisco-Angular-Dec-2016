@@ -38,21 +38,25 @@
 				if (_data[attrName] === value) return;
 				_data[attrName] = value;
 				//trigger change notification for 'attrName'
-				var changeListenerFn = _changeHandlers[attrName];
-				if (typeof changeListenerFn === 'function')
-					changeListenerFn();
+				var changeListenerFns = _changeHandlers[attrName];
+				for(var i=0; i < changeListenerFns.length; i++){
+					var changeListenerFn = changeListenerFns[i];
+					if (typeof changeListenerFn === 'function')
+						changeListenerFn();
+				}
+				
 			};
 
 			var _changeHandlers = {
-				basic : null,
-				hra : null,
-				da : null,
-				tax : null,
-				salary : null
+				basic : [],
+				hra : [],
+				da : [],
+				tax : [],
+				salary : []
 			};
 
 			this.watch = function(attrName, changeListenerFn){
-				_changeHandlers[attrName] = changeListenerFn;
+				_changeHandlers[attrName].push(changeListenerFn);
 			};
 		}		
 		SalaryCalculator.prototype.calculate = function(){
@@ -66,6 +70,7 @@
 		$(document).ready(function(){
 			window.calculator = new SalaryCalculator();
 
+			//Reacting to user actions
 			$("#txtBasic").change(function(){
 				calculator.set('basic', $("#txtBasic").val().toInt());
 			});
@@ -83,16 +88,11 @@
 			});
 
 			$("#btnCalculate").click(function(){
-
 				calculator.calculate();
-
-				
 			});
 
-			$("#rangeTax").change(function(){
-				
-			});
-
+			
+			//Reacting to model changes
 			calculator.watch('salary',function(){
 				$("#divResult").html(calculator.get('salary'));
 			});
