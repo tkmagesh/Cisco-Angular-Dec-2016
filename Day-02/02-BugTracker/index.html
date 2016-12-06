@@ -7,11 +7,11 @@
 		/*
 		Use Cases
 		==========
-		1. Add a new bug
-		2. List the bugs
-		3. Toggle the 'closed' status of a bug
-		4. Remove closed bugs
-		5. Display statistics (# of closed bugs / total # of bugs)
+		1. Add a new bug - done
+		2. List the bugs - done
+		3. Toggle the 'closed' status of a bug - done
+		4. Remove closed bugs - done
+		5. Display statistics (# of closed bugs / total # of bugs) - done
 		6. Search for bugs
 		7. Sort the bugs
 		8. Improvise bug display
@@ -51,15 +51,67 @@
 
 		}
 	</style>
+	<script src="angular.js"></script>
+	<script>
+		var bugTracker = angular.module("bugTracker", []);
+
+		bugTracker.value("defaultBugName", '[Default Bug]');
+
+		
+		bugTracker.factory("bugOperations" , function (defaultBugName){
+			var currentBugId = 0;
+			return {
+				createNew : function(bugName){
+					var newBug = {
+						id : ++currentBugId,
+						name : bugName || defaultBugName,
+						isClosed : false
+					}
+					return newBug;
+				},
+				toggle : function(bug){
+					bug.isClosed = !bug.isClosed;
+				}
+			}
+		});
+
+		bugTracker.controller("bugsController", function($scope, bugOperations){
+			
+			$scope.bugs = [];
+			
+			$scope.addNew = function(bugName){
+				var newBug = bugOperations.createNew(bugName);
+				$scope.bugs.push(newBug);
+			};
+
+			$scope.toggle = function(bug){
+				bugOperations.toggle(bug);
+			};
+
+			$scope.getClosedCount = function(){
+				var closedBugsCount = 0;
+				for(var i=0; i < $scope.bugs.length; i++)
+					if ($scope.bugs[i].isClosed)
+						++closedBugsCount;
+				return closedBugsCount;
+			};
+
+			$scope.removeClosed = function(){
+				for(var i=$scope.bugs.length-1; i >=0; i-- )
+					if ($scope.bugs[i].isClosed)
+						$scope.bugs.splice(i,1);
+			}
+		});
+	</script>
 </head>
-<body>
+<body ng-app="bugTracker">
 	<h1>Bug Tracker</h1>
 	<hr>
-	<section class="content">
+	<section class="content" ng-controller="bugsController">
 		<section class="stats">
-			<span class="closed">2</span>
+			<span class="closed">{{getClosedCount()}}</span>
 			<span> / </span>
-			<span>5</span>
+			<span>{{bugs.length}}</span>
 		</section>
 		<section class="search">
 			<label for="">Search :</label>
@@ -76,15 +128,19 @@
 		</section>
 		<section class="edit">
 			<label for="">Bug :</label>
-			<input type="text" name="" id="">
-			<input type="button" value="Add New">
+			<input type="text" ng-model="newBugName">
+			<input type="button" value="Add New" ng-click="addNew(newBugName)">
 		</section>
 		<section class="list">
 			<ol>
-				<li><span class="bugname">Bug - 1</span></li>
-				<li><span class="bugname closed">Bug - 2</span></li>
+				<li ng-repeat="bug in bugs track by $index">
+					<span class="bugname" ng-click="toggle(bug)" ng-class="{closed : bug.isClosed}">
+						{{bug.name}}
+					</span>
+					<span><i>[{{bug.id}}]</i></span>
+				</li>
 			</ol>
-			<input type="button" value="Remove Closed">
+			<input type="button" value="Remove Closed" ng-click="removeClosed()">
 		</section>
 	</section>
 </body>
