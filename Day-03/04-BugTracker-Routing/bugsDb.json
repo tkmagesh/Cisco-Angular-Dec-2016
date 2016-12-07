@@ -1,0 +1,38 @@
+{
+  "bugs": [
+    {
+      "id": 3,
+      "name": "Server communication failure",
+      "isClosed": true,
+      "createdAt": "2016-09-09T06:38:33.530Z"
+    },
+    {
+      "id": 6,
+      "name": "User actions are not recognized",
+      "isClosed": false,
+      "createdAt": "2016-12-07T09:58:07.398Z"
+    },
+    {
+      "id": 7,
+      "name": "Routing is not working",
+      "isClosed": false,
+      "createdAt": "2016-12-07T10:23:44.960Z"
+    },
+    {
+      "id": 8,
+      "name": "lsa;djf;adsfdas",
+      "isClosed": false,
+      "createdAt": "2016-12-07T10:29:42.013Z"
+    }
+  ],
+  "employees": [
+    {
+      "id": 1,
+      "name": "Magesh"
+    },
+    {
+      "id": 2,
+      "name": "Suresh"
+    }
+  ]
+}

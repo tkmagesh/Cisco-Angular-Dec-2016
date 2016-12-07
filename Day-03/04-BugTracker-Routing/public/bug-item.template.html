@@ -1,0 +1,7 @@
+<li >
+	<span class="bugname" ng-click="select(data)" ng-class="{closed : data.isClosed}">
+		{{data.name | trimText:trimLength}}
+	</span>
+	<div><sub><i>[{{data.createdAt | elapsed}}]<i></sub></div>
+	<a href="/#/bugs/{{data.id}}">More...</a>
+</li>
