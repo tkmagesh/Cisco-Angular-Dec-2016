@@ -15,7 +15,7 @@
 		6. Search for bugs - done
 		7. Sort the bugs - done
 		8. Improvise bug display - done
-		9. Persist the bugs in "localStorage"
+		9. Persist the bugs in "localStorage" - done
 			window.localStorage
 			--------------------
 			* key value store
@@ -29,7 +29,7 @@
 				- clear()
 				- key(index) //=> key at index
 				- length
-				
+
 		10. Dislay "createdAt"
 		11. Persist the bugs in the server
 		12. Make the bugs accessible using an unique url (for each bug)
@@ -73,12 +73,10 @@
 
 		
 		bugTracker.factory("bugOperations" , function (defaultBugName ){
-			console.log(this);
-			var currentBugId = 0;
 			return {
-				createNew : function(bugName){
+				createNew : function(id, bugName){
 					var newBug = {
-						id : ++currentBugId,
+						id : id,
 						name : bugName || defaultBugName,
 						isClosed : false
 					}
@@ -90,21 +88,57 @@
 			}
 		});
 
-		bugTracker.controller("bugsController", function($scope, bugOperations){
+		bugTracker.factory("bugStorage", function(bugOperations){
+			var currentBugId = 0;
+			var storage = window.localStorage;
+
+			function addNewBug(bugName){
+				var newBug = bugOperations.createNew(++currentBugId, bugName);
+				saveBug(newBug);
+				return newBug;
+			}
+
+			function saveBug(bug){
+				storage.setItem(bug.id, angular.toJson(bug));
+			}
+
+			function getAllBugs(){
+				var bugs = [];
+				for(var i=0; i < storage.length; i++){
+					var dataAsString = storage.getItem(storage.key(i));
+					var bug = angular.fromJson(dataAsString);
+					currentBugId = currentBugId > bug.id ? currentBugId : bug.id;
+					bugs.push(bug);
+				}
+				return bugs;
+			}
+
+			function toggleBug(bug){
+				bugOperations.toggle(bug);
+				saveBug(bug);
+			}
+			function removeBug(bug){
+				storage.removeItem(bug.id);
+			}
+			return {
+				addNew : addNewBug,
+				getAll : getAllBugs,
+				toggle : toggleBug,
+				remove : removeBug
+			}
+		});
+
+		bugTracker.controller("bugsController", function($scope, bugStorage){
 			
-			$scope.bugs = [
-				bugOperations.createNew('Server communication failure'),
-				bugOperations.createNew('Persistance is not consistent'),
-				bugOperations.createNew('User actions not recognized'),
-			];
+			$scope.bugs = bugStorage.getAll();
 			
 			$scope.addNew = function(bugName){
-				var newBug = bugOperations.createNew(bugName);
+				var newBug = bugStorage.addNew(bugName);
 				$scope.bugs.push(newBug);
 			};
 
 			$scope.toggle = function(bug){
-				bugOperations.toggle(bug);
+				bugStorage.toggle(bug);
 			};
 
 			/*
@@ -118,8 +152,10 @@
 			*/
 			$scope.removeClosed = function(){
 				for(var i=$scope.bugs.length-1; i >=0; i-- )
-					if ($scope.bugs[i].isClosed)
-						$scope.bugs.splice(i,1);
+					if ($scope.bugs[i].isClosed){
+						bugStorage.remove($scope.bugs[i]);
+						$scope.bugs.splice(i,1)
+					}
 			}
 		});
 
