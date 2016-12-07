@@ -93,6 +93,7 @@
 				bugOperations.toggle(bug);
 			};
 
+			/*
 			$scope.getClosedCount = function(){
 				var closedBugsCount = 0;
 				for(var i=0; i < $scope.bugs.length; i++)
@@ -100,7 +101,7 @@
 						++closedBugsCount;
 				return closedBugsCount;
 			};
-
+			*/
 			$scope.removeClosed = function(){
 				for(var i=$scope.bugs.length-1; i >=0; i-- )
 					if ($scope.bugs[i].isClosed)
@@ -115,7 +116,43 @@
 				trimLength = trimLength || defaultTrimLength;
 				return bugName.length < trimLength ? bugName : bugName.substr(0,trimLength) + '...';
 			}
-		})
+		});
+
+		/*bugTracker.filter('toClosedCount', function(){
+			return function(bugs){
+				var closedBugsCount = 0;
+				for(var i=0; i < bugs.length; i++)
+					if (bugs[i].isClosed)
+						++closedBugsCount;
+				return closedBugsCount;
+			};
+		});*/
+
+		/*bugTracker.filter('toClosedCount', function($filter){
+			var builtinFilterFilter = $filter('filter')
+			return function(bugs){
+				return builtinFilterFilter(bugs, {isClosed : true}).length;
+			}
+		})*/
+
+		/*bugTracker.filter('toClosedCount', function(){
+			return function(bugs){
+				//return bugs.filter(function(bug){
+				//	return bug.isClosed
+				//}).length;
+
+				return bugs.filter(bug => bug.isClosed).length;
+			}
+		});*/
+
+		bugTracker.filter('toClosedCount', function(){
+			return function(bugs){
+				return bugs.reduce(function(result, bug){
+					return bug.isClosed ? result + 1 : result;
+				},0);
+			};
+		});
+
 	</script>
 </head>
 <body ng-app="bugTracker">
@@ -123,7 +160,8 @@
 	<hr>
 	<section class="content" ng-controller="bugsController">
 		<section class="stats">
-			<span class="closed">{{getClosedCount()}}</span>
+			<span class="closed">{{bugs | toClosedCount}}</span>
+			<!-- <span class="closed">{{ (bugs | filter:{isClosed:true}).length }}</span> -->
 			<span> / </span>
 			<span>{{bugs.length}}</span>
 		</section>
