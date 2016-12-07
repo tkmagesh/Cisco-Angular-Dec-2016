@@ -30,7 +30,7 @@
 				- key(index) //=> key at index
 				- length
 
-		10. Dislay "createdAt"
+		10. Dislay "createdAt" - date
 		11. Persist the bugs in the server
 		12. Make the bugs accessible using an unique url (for each bug)
 		*/
@@ -66,8 +66,11 @@
 		}
 	</style>
 	<script src="angular.js"></script>
+	<script src="moment.js"></script>
+	<script src="utils.js"></script>
 	<script>
-		var bugTracker = angular.module("bugTracker", []);
+		
+		var bugTracker = angular.module("bugTracker", ["utils"]);
 
 		bugTracker.value("defaultBugName", '[Default Bug]');
 
@@ -78,7 +81,8 @@
 					var newBug = {
 						id : id,
 						name : bugName || defaultBugName,
-						isClosed : false
+						isClosed : false,
+						createdAt : new Date()
 					}
 					return newBug;
 				},
@@ -195,12 +199,7 @@
 
 		bugTracker.value("defaultTrimLength" , 30);
 
-		bugTracker.filter('trimText', function(defaultTrimLength){
-			return function(bugName, trimLength){
-				trimLength = trimLength || defaultTrimLength;
-				return bugName.length < trimLength ? bugName : bugName.substr(0,trimLength) + '...';
-			}
-		});
+		
 
 		/*bugTracker.filter('toClosedCount', function(){
 			return function(bugs){
@@ -236,6 +235,8 @@
 				},0);
 			};
 		});
+
+		
 
 	</script>
 </head>
@@ -278,7 +279,7 @@
 					<span class="bugname" ng-click="toggle(bug)" ng-class="{closed : bug.isClosed}">
 						{{bug.name | trimText:trimLength}}
 					</span>
-					<span><i>[{{bug.id}}]</i></span>
+					<div><sub><i>[{{bug.createdAt | elapsed}}]<i></sub></div>
 				</li>
 			</ol>
 			<input type="button" value="Remove Closed" ng-click="removeClosed()">
