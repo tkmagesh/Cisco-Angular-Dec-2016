@@ -14,7 +14,7 @@
 		5. Display statistics (# of closed bugs / total # of bugs) - done
 		6. Search for bugs - done
 		7. Sort the bugs - done
-		8. Improvise bug display
+		8. Improvise bug display - done
 		9. Persist the bugs in "localStorage"
 		10. Dislay "createdAt"
 		11. Persist the bugs in the server
@@ -58,7 +58,8 @@
 		bugTracker.value("defaultBugName", '[Default Bug]');
 
 		
-		bugTracker.factory("bugOperations" , function (defaultBugName){
+		bugTracker.factory("bugOperations" , function (defaultBugName ){
+			console.log(this);
 			var currentBugId = 0;
 			return {
 				createNew : function(bugName){
@@ -106,6 +107,15 @@
 						$scope.bugs.splice(i,1);
 			}
 		});
+
+		bugTracker.value("defaultTrimLength" , 30);
+
+		bugTracker.filter('trimText', function(defaultTrimLength){
+			return function(bugName, trimLength){
+				trimLength = trimLength || defaultTrimLength;
+				return bugName.length < trimLength ? bugName : bugName.substr(0,trimLength) + '...';
+			}
+		})
 	</script>
 </head>
 <body ng-app="bugTracker">
@@ -140,10 +150,11 @@
 			<input type="button" value="Add New" ng-click="addNew(newBugName)">
 		</section>
 		<section class="list">
+			<input type="range" ng-model="trimLength" max="40">
 			<ol>
 				<li ng-repeat="bug in (bugs | filter:searchBug | orderBy:sortBugBy:sortBugDescending)">
 					<span class="bugname" ng-click="toggle(bug)" ng-class="{closed : bug.isClosed}">
-						{{bug.name}}
+						{{bug.name | trimText:trimLength}}
 					</span>
 					<span><i>[{{bug.id}}]</i></span>
 				</li>
