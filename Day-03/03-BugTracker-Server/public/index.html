@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Bug Tracker</title>
+	<script>
+		/*
+		Use Cases
+		==========
+		1. Add a new bug - done
+		2. List the bugs - done
+		3. Toggle the 'closed' status of a bug - done
+		4. Remove closed bugs - done
+		5. Display statistics (# of closed bugs / total # of bugs) - done
+		6. Search for bugs - done
+		7. Sort the bugs - done
+		8. Improvise bug display - done
+		9. Persist the bugs in "localStorage" - done
+			window.localStorage
+			--------------------
+			* key value store
+			* key and value should be string
+			* Use angular.toJson() and angular.fromJson() for searialization and deserialization
+			APIs
+			----
+				- setItem(key, value)
+				- getItem(key) //=> value
+				- removeItem(key)
+				- clear()
+				- key(index) //=> key at index
+				- length
+
+		10. Dislay "createdAt" - date
+		11. Persist the bugs in the server
+		12. Make the bugs accessible using an unique url (for each bug)
+		*/
+	</script>
+	<style>
+		.bugname, .stats{
+			font-size: 20pt;
+		}
+		section{
+			margin-bottom: 10px;
+		}
+		.closed{
+			color : red;
+			text-decoration: line-through;
+			font-style: italic;
+			font-weight: bold;
+		}
+		.bugname{
+			cursor: pointer;
+		}
+		ol{
+			width: 500px;
+			list-style: none;
+			-webkit-padding-start:  0px;
+		}
+		li{
+			margin-bottom: 5px;
+			padding: 5px;
+			border : 1px solid gray;
+			background-color: #e7e7e7;
+			border-radius: 5px;
+
+		}
+	</style>
+	<script src="angular.js"></script>
+	<script src="moment.js"></script>
+	<script src="utils.js"></script>
+	<script>
+		
+		var bugTracker = angular.module("bugTracker", ["utils"]);
+
+		bugTracker.value("defaultBugName", '[Default Bug]');
+
+		
+		bugTracker.factory("bugOperations" , function (defaultBugName ){
+			return {
+				createNew : function(id, bugName){
+					var newBug = {
+						id : id,
+						name : bugName || defaultBugName,
+						isClosed : false,
+						createdAt : new Date()
+					}
+					return newBug;
+				},
+				toggle : function(bug){
+					bug.isClosed = !bug.isClosed;
+				}
+			}
+		});
+
+		/*bugTracker.factory("bugStorage", function(bugOperations){
+			var currentBugId = 0;
+			var storage = window.localStorage;
+
+			function addNewBug(bugName){
+				var newBug = bugOperations.createNew(++currentBugId, bugName);
+				saveBug(newBug);
+				return newBug;
+			}
+
+			function saveBug(bug){
+				storage.setItem(bug.id, angular.toJson(bug));
+			}
+
+			function getAllBugs(){
+				var bugs = [];
+				for(var i=0; i < storage.length; i++){
+					var dataAsString = storage.getItem(storage.key(i));
+					var bug = angular.fromJson(dataAsString);
+					currentBugId = currentBugId > bug.id ? currentBugId : bug.id;
+					bugs.push(bug);
+				}
+				return bugs;
+			}
+
+			function toggleBug(bug){
+				bugOperations.toggle(bug);
+				saveBug(bug);
+			}
+			function removeBug(bug){
+				storage.removeItem(bug.id);
+			}
+			return {
+				addNew : addNewBug,
+				getAll : getAllBugs,
+				toggle : toggleBug,
+				remove : removeBug
+			}
+		});*/
+
+		bugTracker.service("bugStorage", function(bugOperations){
+			var currentBugId = 0;
+			var storage = window.localStorage;
+
+			this.addNew = function(bugName){
+				var newBug = bugOperations.createNew(++currentBugId, bugName);
+				saveBug(newBug);
+				return newBug;
+			}
+
+			function saveBug(bug){
+				storage.setItem(bug.id, angular.toJson(bug));
+			}
+
+			this.getAll = function(){
+				var bugs = [];
+				for(var i=0; i < storage.length; i++){
+					var dataAsString = storage.getItem(storage.key(i));
+					var bug = angular.fromJson(dataAsString);
+					currentBugId = currentBugId > bug.id ? currentBugId : bug.id;
+					bugs.push(bug);
+				}
+				return bugs;
+			}
+
+			this.toggle = function(bug){
+				bugOperations.toggle(bug);
+				saveBug(bug);
+			}
+			this.remove = function(bug){
+				storage.removeItem(bug.id);
+			}
+			
+		});
+		bugTracker.controller("bugsController", function($scope, bugStorage){
+			
+			$scope.bugs = bugStorage.getAll();
+			
+			$scope.addNew = function(bugName){
+				var newBug = bugStorage.addNew(bugName);
+				$scope.bugs.push(newBug);
+			};
+
+			$scope.toggle = function(bug){
+				bugStorage.toggle(bug);
+			};
+
+			/*
+			$scope.getClosedCount = function(){
+				var closedBugsCount = 0;
+				for(var i=0; i < $scope.bugs.length; i++)
+					if ($scope.bugs[i].isClosed)
+						++closedBugsCount;
+				return closedBugsCount;
+			};
+			*/
+			$scope.removeClosed = function(){
+				for(var i=$scope.bugs.length-1; i >=0; i-- )
+					if ($scope.bugs[i].isClosed){
+						bugStorage.remove($scope.bugs[i]);
+						$scope.bugs.splice(i,1)
+					}
+			}
+		});
+
+		bugTracker.value("defaultTrimLength" , 30);
+
+		
+
+		/*bugTracker.filter('toClosedCount', function(){
+			return function(bugs){
+				var closedBugsCount = 0;
+				for(var i=0; i < bugs.length; i++)
+					if (bugs[i].isClosed)
+						++closedBugsCount;
+				return closedBugsCount;
+			};
+		});*/
+
+		/*bugTracker.filter('toClosedCount', function($filter){
+			var builtinFilterFilter = $filter('filter')
+			return function(bugs){
+				return builtinFilterFilter(bugs, {isClosed : true}).length;
+			}
+		})*/
+
+		/*bugTracker.filter('toClosedCount', function(){
+			return function(bugs){
+				//return bugs.filter(function(bug){
+				//	return bug.isClosed
+				//}).length;
+
+				return bugs.filter(bug => bug.isClosed).length;
+			}
+		});*/
+
+		bugTracker.filter('toClosedCount', function(){
+			return function(bugs){
+				return bugs.reduce(function(result, bug){
+					return bug.isClosed ? result + 1 : result;
+				},0);
+			};
+		});
+
+		
+
+	</script>
+</head>
+<body ng-app="bugTracker">
+	<h1>Bug Tracker</h1>
+	<hr>
+	<section class="content" ng-controller="bugsController">
+		<section class="stats">
+			<span class="closed">{{bugs | toClosedCount}}</span>
+			<!-- <span class="closed">{{ (bugs | filter:{isClosed:true}).length }}</span> -->
+			<span> / </span>
+			<span>{{bugs.length}}</span>
+		</section>
+		<section class="search">
+			<label for="">Search :</label>
+			<input type="text" ng-model="searchBug.name">
+			<label for="">Closed? :</label>
+			<input type="checkbox" ng-model="searchBug.isClosed">
+			<input type="button" value="Show All" ng-click="searchBug=''" ng-init="searchBug=''" ng-hide="searchBug==''">
+		</section>
+		<section class="sort">
+			<label for="">Sort :</label>
+			<!-- <input type="text" ng-model="sortBugBy"> -->
+			<select ng-model="sortBugBy">
+				<option value="name">Name</option>
+				<option value="isClosed">Status</option>
+			</select>
+			<label for="">Descending? :</label>
+			<input type="checkbox" ng-model="sortBugDescending">
+		</section>
+		<section class="edit">
+			<label for="">Bug :</label>
+			<input type="text" ng-model="newBugName">
+			<input type="button" value="Add New" ng-click="addNew(newBugName)">
+		</section>
+		<section class="list">
+			<input type="range" ng-model="trimLength" max="40">
+			<ol>
+				<li ng-repeat="bug in (bugs | filter:searchBug | orderBy:sortBugBy:sortBugDescending)">
+					<span class="bugname" ng-click="toggle(bug)" ng-class="{closed : bug.isClosed}">
+						{{bug.name | trimText:trimLength}}
+					</span>
+					<div><sub><i>[{{bug.createdAt | elapsed}}]<i></sub></div>
+				</li>
+			</ol>
+			<input type="button" value="Remove Closed" ng-click="removeClosed()">
+		</section>
+	</section>
+</body>
+</html>
